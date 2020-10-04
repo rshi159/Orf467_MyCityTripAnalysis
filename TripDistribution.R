@@ -3,6 +3,8 @@ rm(list=ls())
 setwd("C:\\Users\\benny\\OneDrive\\Desktop\\Academic Work\\20202021\\ORF478\\ProjectWork\\csv")
 set.seed(2020)
 
+library("gridExtra")
+
 TAZ <- data.frame(read.csv(file = 'TAZ Data - Sheet1.csv'))
 num_rows = nrow(TAZ)
 zone_names <- data.frame(read.csv(file = 'TAZ Data - Sheet2.csv', header = FALSE))
@@ -78,10 +80,10 @@ write.csv(row2, file = "row2.csv")
 #-------------------------------------------------------------------------------
 # row 3
 #-------------------------------------------------------------------------------
-p_3_ue = vector("double", num_rows)
-a_3_ue = vector("double", num_rows)
-p_3_e = vector("double", num_rows)
-a_3_e = vector("double", num_rows)
+p_home_to_shop_unemployed = vector("double", num_rows)
+a_home_to_shop_unemployed = vector("double", num_rows)
+p_home_to_shop_employed = vector("double", num_rows)
+a_home_to_shop_employed = vector("double", num_rows)
 shoppers_ue = 1*(unemployed+demographics[5]*tp)
       
 shoppers_e = 0.3*(demographics[2]+demographics[3])*tp
@@ -90,9 +92,9 @@ j = 0
 for (i in TAZ[,2]){
   j = j + 1
   if(i == 6) {
-    p_3_ue[j] = round(shoppers_ue
+    p_home_to_shop_unemployed[j] = round(shoppers_ue
                          *(TAZ[j,3]/pixel_marketcap[6]))
-    p_3_e[j] = round(shoppers_e*TAZ[j,3]/pixel_marketcap[6])
+    p_home_to_shop_employed[j] = round(shoppers_e*TAZ[j,3]/pixel_marketcap[6])
   
   }
 }
@@ -102,13 +104,13 @@ rec_dist_3 = c(0,0.07,0.10,0,0,0,0.13,0.06,0.56,0,0.06,0.02)
 j=0
 for (i in TAZ[,2]){
   j = j + 1
-  a_3_ue[j] = round(rec_dist_3[i]*shoppers_ue*TAZ[j,3]/pixel_marketcap[i])
-  a_3_e[j] = round(rec_dist_3[i]*shoppers_e*TAZ[j,3]/pixel_marketcap[i])
+  a_home_to_shop_unemployed[j] = round(rec_dist_3[i]*shoppers_ue*TAZ[j,3]/pixel_marketcap[i])
+  a_home_to_shop_employed[j] = round(rec_dist_3[i]*shoppers_e*TAZ[j,3]/pixel_marketcap[i])
 }
-a_3_e = equalizer(p_3_e, a_3_e)
-a_3_ue = equalizer(p_3_ue, a_3_ue)
-row3_unemployed = data.frame(p_3_ue, a_3_ue)
-row3_employed = data.frame(p_3_e, a_3_e)
+a_home_to_shop_employed = equalizer(p_home_to_shop_employed, a_home_to_shop_employed)
+a_home_to_shop_unemployed = equalizer(p_home_to_shop_unemployed, a_home_to_shop_unemployed)
+row3_unemployed = data.frame(p_home_to_shop_unemployed, a_home_to_shop_unemployed)
+row3_employed = data.frame(p_home_to_shop_employed, a_home_to_shop_employed)
 
 write.csv(row3_unemployed, file = "row3_unemployed_homebased_shopping.csv")
 write.csv(row3_employed, file = "row3_employed_homebased_shopping.csv")
@@ -144,8 +146,8 @@ write.csv(row5, file ="row5.csv")
 #-------------------------------------------------------------------------------
 # row 6
 #-------------------------------------------------------------------------------
-p_6_e = round(0.50 * a_3_e)
-p_6_ue = round(0.50 * a_3_ue)
+p_6_e = round(0.50 * a_home_to_shop_employed)
+p_6_ue = round(0.50 * a_home_to_shop_unemployed)
 a_6_e = vector("double", num_rows)
 a_6_ue = vector("double", num_rows)
 j = 0
@@ -284,3 +286,64 @@ cominghome_e = data.frame(p_9_home_e, a_9_home_e)
 cominghome_ue = data.frame(p_9_home_ue, a_9_home_ue)
 write.csv(cominghome_e, file = "row9_employed_homebound_shopping.csv")
 write.csv(cominghome_ue, file = "row9_unemployed_homebound_shopping.csv")
+
+#-------------------------------------------------------------------------------
+# print to pdf
+#-------------------------------------------------------------------------------
+pdf("Home_to_Work.pdf", height=22, width=7)       # Export PDF
+grid.table(row1)
+dev.off()
+pdf("Home_to_School.pdf", height=22, width=7)       # Export PDF
+grid.table(row2)
+dev.off()
+pdf("row3_unemployed_homebased_shopping.pdf", height=22, width=7)       # Export PDF
+grid.table(row3_unemployed)
+dev.off()
+pdf("row3_employed_homebased_shopping.pdf", height=22, width=7)       # Export PDF
+grid.table(row3_employed)
+dev.off()
+pdf("row4_coming_home_from_work.pdf", height=22, width=7)       # Export PDF
+grid.table(row4,cols = c("p_work_to_home","a_work_to_home"))
+dev.off()
+pdf("row5_coming_home_from_school.pdf", height=22, width=7) 
+grid.table(row5,cols = c("p_school_to_home","a_school_to_home"))
+dev.off()
+pdf("row6_homebound_employed_shoppers.pdf", height=22, width=7) 
+grid.table(row6_e,cols = c("p_employed_shoppers_to_home","a_employed_shoppers_to_home"))
+dev.off()
+pdf("row6_homebound_unemployed_shoppers.pdf", height=22, width=7) 
+grid.table(row6_ue,cols = c("p_unemployed_shoppers_to_home","a_unemployed_shoppers_to_home"))
+dev.off()
+
+pdf("row7_going_to_lunch.pdf", height=22, width=7) 
+grid.table(going_to_lunch, cols = c("p_work_to_lunch","a_work_to_lunch"))
+dev.off()
+pdf("row7_coming_from_lunch.pdf", height=22, width=7) 
+grid.table(coming_from_lunch, cols = c("p_lunch_to_work","a_lunch_to_work"))
+dev.off()
+pdf("row7_afterwork_recreate.pdf", height=22, width=7) 
+grid.table(afterwork_recreate, cols = c("p_work_to_recreate/shop","a_work_to_recreate/shop"))
+dev.off()
+pdf("row7_coming_home_after_recreate.pdf", height=22, width=7) 
+grid.table(cominghome, cols = c("p_recreate/shop(afterwork)_to_home","a_recreate/shop(afterwork)_to_home"))
+dev.off()
+
+pdf("row8_afterschool_extracurricular.pdf", height=22, width=7) 
+grid.table(afterschool_extracurricular, cols = c("p_school_to_recreate/shop","a_school_to_recreate/shop"))
+dev.off()
+pdf("row8_goinghome_extracurricular.pdf", height=22, width=7) 
+grid.table(goinghome_after_extracurricular, cols = c("p_recreate/shop(afterschool)_to_home","a_recreate/shop(afterschool)_to_home"))
+dev.off()
+
+pdf("row9_more_shopping_employed.pdf", height=22, width=7) 
+grid.table(row9_e, cols = c("p_shop_to_more_shop(employed)","a_shop_to_more_shop(employed)"))
+dev.off()
+pdf("row9_more_shopping_unemployed.pdf", height=22, width=7) 
+grid.table(row9_ue, cols = c("p_shop_to_more_shop(unemployed)","a_shop_to_more_shop(unemployed)"))
+dev.off()
+pdf("row9_employed_homebound_shopping.pdf", height=22, width=7) 
+grid.table(cominghome_e, cols = c("p_more_shop_to_home(employed)","a_more_shop_to_home(employed)"))
+dev.off()
+pdf("row9_unemployed_homebound_shopping.pdf", height=22, width=7) 
+grid.table(cominghome_ue, cols = c("p_more_shop_to_home(unemployed)","a_more_shop_to_home(unemployed)"))
+dev.off()
